@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Symptom Checker</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
+
+        /* General Styling */
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0px 10px 20px rgba(0, 0, 0, 0.2);
+            max-width: 600px;
+            width: 90%;
+            text-align: center;
+            backdrop-filter: blur(10px);
+        }
+
+        h1 {
+            font-size: 24px;
+            margin-bottom: 15px;
+        }
+
+        /* Stylish Scrollable Symptom List */
+        .symptom-list {
+            max-height: 250px;
+            overflow-y: auto;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 8px;
+            padding: 10px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        /* Checkbox Style */
+        .symptom-item {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            padding: 8px 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .symptom-item:hover {
+            background: rgba(255, 255, 255, 0.4);
+        }
+
+        .symptom-item input {
+            display: none;
+        }
+
+        /* Selected Checkbox Effect */
+        .symptom-item.selected {
+            background: #ff6b6b;
+            color: white;
+            transform: scale(1.05);
+            box-shadow: 0 4px 10px rgba(255, 107, 107, 0.4);
+        }
+
+        /* Predict Button */
+        button {
+            background: linear-gradient(135deg, #ff758c, #ff7eb3);
+            border: none;
+            padding: 12px;
+            font-size: 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 20px;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+
+        button:hover {
+            background: linear-gradient(135deg, #ff7eb3, #ff758c);
+        }
+
+        /* Result Box */
+        #result-box {
+            margin-top: 20px;
+            background: rgba(255, 255, 255, 0.15);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: left;
+            display: none;
+        }
+
+        #result-box h2 {
+            color: #ffeb3b;
+        }
+
+        #result-box p {
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        a {
+            color: #ffeb3b;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+    </style>
+</head>
+<body>
+    
+    <div class="container">
+        <h1>Symptom Checker</h1>
+
+        <form id="symptomForm">
+            <div class="symptom-list">
+                {% for symptom in symptoms %}
+                    <div class="symptom-item">
+                        <input type="checkbox" name="symptoms" value="{{ symptom }}">
+                        {{ symptom }}
+                    </div>
+                {% endfor %}
+            </div>
+            <button type="submit">Predict Disease</button>
+        </form>
+
+        <div id="result-box">
+            <h2 id="disease"></h2>
+            <h3>Precautions:</h3>
+            <p id="precautions"></p>
+            <h3>Medicines:</h3>
+            <p id="medicines"></p>
+        </div> <br/>
+        <a href="/history" style="float:left">Go to History</a>
+        <a href="/logout" style="float:right">Logout</a>
+        
+    </div>
+
+    <script>
+        // Custom Checkbox Click Effect
+        document.querySelectorAll('.symptom-item').forEach(item => {
+            item.addEventListener('click', function() {
+                let checkbox = this.querySelector('input');
+                checkbox.checked = !checkbox.checked;
+                this.classList.toggle('selected');
+            });
+        });
+
+        // Handle Form Submission
+        document.getElementById("symptomForm").addEventListener("submit", function(event) {
+            event.preventDefault();
+
+            let formData = new FormData(this);
+
+            fetch("/predict", { method: "POST", body: formData })
+            .then(response => response.json())
+            .then(data => {
+                if (data.predicted_disease) {
+                    document.getElementById("disease").innerText = data.predicted_disease;
+                    document.getElementById("precautions").innerText = data.precautions.join(', ');
+                    document.getElementById("medicines").innerText = data.medicines.join(', ');
+                    document.getElementById("result-box").style.display = "block";
+                }
+            })
+            .catch(error => console.error("Error:", error));
+        });
+    </script>
+
+</body>
+</html>
